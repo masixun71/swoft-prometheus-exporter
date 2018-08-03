@@ -1,0 +1,36 @@
+{
+    "name": "extraswoft/prometheusExporter",
+    "type": "library",
+    "keywords": [
+        "php",
+        "swoole",
+        "swoft",
+        "prometheusExporter",
+        "prometheus"
+    ],
+    "description": "prometheusExporter for swoft",
+    "license": "Apache-2.0",
+    "require": {
+        "swoft/http-message": "*",
+        "swoft/framework": "*",
+        "swoft/http-client": "*",
+        "doctrine/annotations": "^1.4",
+        "swoft/redis": "*",
+        "swoft/memory": "*",
+        "swoft/http-server": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ExtraSwoft\\PrometheusExporter\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    ],
+    "config": {
+        "secure-http": false
+    }
+}
