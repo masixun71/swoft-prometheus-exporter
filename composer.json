@@ -1,5 +1,5 @@
 {
-    "name": "extraswoft/prometheusExporter",
+    "name": "extraswoft/prometheus-exporter",
     "type": "library",
     "keywords": [
         "php",
