@@ -8,8 +8,8 @@
  */
 namespace ExtraSwoft\PrometheusExporter\Boot;
 use Swoft\Bean\Annotation\BootBean;
+use Swoft\Bootstrap\Boots\LoadEnv;
 use Swoft\Memory\Table;
-use Swoole\Lock;
 
 
 /**
@@ -26,11 +26,11 @@ class PrometheusExporterTable
 
     private $histogramTable;
 
-    private $lock;
-
 
     public function __construct()
     {
+        (new LoadEnv())->bootstrap();
+
         $counterStruct = [
             'metricName'   => [Table::TYPE_STRING, 100],
             'labelString'  => [Table::TYPE_STRING, 255],
@@ -38,7 +38,7 @@ class PrometheusExporterTable
             'updateTime'  => [Table::TYPE_STRING, 15],
             'help' => [Table::TYPE_STRING, 255],
         ];
-        $this->counterTable = new Table('counterPETable', 1024, $counterStruct);
+        $this->counterTable = new Table('counterPETable', env('PROMETHEUSEXPORTER_COUNTER_LINE'), $counterStruct);
         $this->counterTable->create();
 
         $gaugeStruct = [
@@ -48,7 +48,7 @@ class PrometheusExporterTable
             'updateTime'  => [Table::TYPE_STRING, 15],
             'help' => [Table::TYPE_STRING, 255],
         ];
-        $this->gaugeTable = new Table('gaugePETable', 1024, $gaugeStruct);
+        $this->gaugeTable = new Table('gaugePETable', env('PROMETHEUSEXPORTER_GAUGE_LINE'), $gaugeStruct);
         $this->gaugeTable->create();
 
         $histogramStruct = [
@@ -58,10 +58,9 @@ class PrometheusExporterTable
             'updateTime'  => [Table::TYPE_STRING, 15],
             'help' => [Table::TYPE_STRING, 255],
         ];
-        $this->histogramTable = new Table('histogramPETable', 1024, $histogramStruct);
+        $this->histogramTable = new Table('histogramPETable', env('PROMETHEUSEXPORTER_HISTOGRAM_LINE'), $histogramStruct);
         $this->histogramTable->create();
 
-        $this->lock = new Lock(SWOOLE_MUTEX);
     }
 
 
@@ -90,10 +89,6 @@ class PrometheusExporterTable
         return $this->histogramTable;
     }
 
-    public function getLock(): Lock
-    {
-        return $this->lock;
-    }
 
 
     public function beans()

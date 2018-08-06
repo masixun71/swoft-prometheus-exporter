@@ -72,11 +72,7 @@ class PECollectorRegistry
             'help' => $help,
         ];
 
-//        $redisPrefix = env('PROMETHEUSEXPORTER_REDIS_PREFIX');
-        $cacheKey = \swoole_serialize::pack($metricName . $labelString, SWOOLE_FAST_PACK);
-        $cacheKey = md5($cacheKey);
-//        $this->cache->sAdd($redisPrefix . 'histogramTable', $cacheKey);
-//        $this->cache->set($redisPrefix . $cacheKey, \swoole_serialize::pack($struct));
+        $cacheKey = md5($metricName . $labelString);
         $this->prometheusExporterTable->getGaugeTable()->set($cacheKey, $struct);
 
 
@@ -99,8 +95,7 @@ class PECollectorRegistry
         $metricName = $this->getMetricName($namespace, $name);
         $labelString = $this->getLabelString($labels);
 
-        $cacheKey = \swoole_serialize::pack($metricName . $labelString, SWOOLE_FAST_PACK);
-        $cacheKey = md5($cacheKey);
+        $cacheKey = md5($metricName . $labelString);
 
 
         $this->incrTable($this->prometheusExporterTable->getCounterTable(), $cacheKey, $value, $metricName, $labelString, $help);
@@ -123,8 +118,7 @@ class PECollectorRegistry
         $metricName = $this->getMetricName($namespace, $name);
         $labelString = $this->getLabelString($labels);
 
-        $cacheKey = \swoole_serialize::pack($metricName . $labelString, SWOOLE_FAST_PACK);
-        $cacheKey = md5($cacheKey);
+        $cacheKey = md5($metricName . $labelString);
 
         if ($this->prometheusExporterTable->getCounterTable()->exist($cacheKey))
         {
@@ -148,8 +142,7 @@ class PECollectorRegistry
         foreach ($items as $item)
         {
             $labelString = $this->getLabelString($item['label']);
-            $cacheKey = \swoole_serialize::pack($bucketMetricName . $labelString, SWOOLE_FAST_PACK);
-            $cacheKey = md5($cacheKey);
+            $cacheKey = md5($bucketMetricName . $labelString);
             $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $cacheKey, $item['value'], $bucketMetricName, $labelString, $histogram->getHelp());
 
             $this->histograms[$cacheKey] = 1;
@@ -157,16 +150,15 @@ class PECollectorRegistry
 
         $labelString = $this->getLabelString($histogram->getLabels());
         $sumMetricName = $metricName . '_sum';
-        $sumCacheKey = \swoole_serialize::pack($sumMetricName . $labelString, SWOOLE_FAST_PACK);
-        $sumCacheKey = md5($sumCacheKey);
+        $sumCacheKey = md5($sumMetricName . $labelString);
         $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $sumCacheKey, $histogram->getSum(), $sumMetricName, $labelString, $histogram->getHelp());
         $this->histograms[$sumCacheKey] = 1;
 
         $countMetricName = $metricName . '_count';
-        $countCacheKey = \swoole_serialize::pack($countMetricName . $labelString, SWOOLE_FAST_PACK);
-        $countCacheKey = md5($countCacheKey);
+        $countCacheKey = md5($sumMetricName . $labelString);
         $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $countCacheKey, $histogram->getCount(), $countMetricName, $labelString, $histogram->getHelp());
         $this->histograms[$countCacheKey] = 1;
+
     }
 
 
@@ -365,6 +357,4 @@ class PECollectorRegistry
             $this->cache->set($redisPrefix . $mapValueKey . $key, \swoole_serialize::pack($mapTable->get($key)));
         }
     }
-
-
 }

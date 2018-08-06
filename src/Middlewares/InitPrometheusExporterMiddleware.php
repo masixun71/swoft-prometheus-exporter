@@ -63,10 +63,13 @@ class InitPrometheusExporterMiddleware implements MiddlewareInterface
         $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'all']);
         $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'api', 'uri' => $uri]);
 
-        $cacheTable = PECacheTableCollector::getCollector()[RequestContext::getContextData()['controllerClass']][RequestContext::getContextData()['controllerAction']];
-        if ($cacheTable)
+        if (isset(PECacheTableCollector::getCollector()[RequestContext::getContextData()['controllerClass']][RequestContext::getContextData()['controllerAction']]))
         {
-            $this->collectorRegistry->cacheTable();
+            $cacheTable = PECacheTableCollector::getCollector()[RequestContext::getContextData()['controllerClass']][RequestContext::getContextData()['controllerAction']];
+            if ($cacheTable)
+            {
+                $this->collectorRegistry->cacheTable();
+            }
         }
 
         return $response;

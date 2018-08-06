@@ -7,6 +7,7 @@ namespace ExtraSwoft\PrometheusExporter\Cache;
 use ExtraSwoft\PrometheusExporter\Boot\PrometheusExporterTable;
 use Swoft\Bean\Annotation\Bean;
 use Swoft\Bean\Annotation\Inject;
+use Swoft\Exception\Exception;
 use Swoft\Redis\Redis;
 
 /**
@@ -38,17 +39,22 @@ class CacheForTable
 
     public function getValueFromCache()
     {
-        $lock = $this->prometheusExporterTable->getLock();
+        $counterTable = $this->prometheusExporterTable->getCounterTable();
 
-        $res = $lock->trylock();
-        if ($res)
+        if (!$counterTable->exist('setTable'))
         {
             $this->getCounterTable();
             $this->getGaugeTable();
             $this->getHistogramTable();
 
+            $counterTable->set('setTable', [
+                'metricName'   => 'setTable',
+                'labelString'  => '',
+                'value' => 1,
+                'updateTime'  => '',
+                'help' => '',
+            ]);
             $this->init = true;
-            $lock->unlock();
         }
         else
         {
@@ -61,10 +67,16 @@ class CacheForTable
     private function getCounterTable()
     {
         $redisPrefix = env('PROMETHEUSEXPORTER_REDIS_PREFIX');
+        $line = env('PROMETHEUSEXPORTER_COUNTER_LINE');
         $resultCounter = $this->cache->sMembers($redisPrefix . 'counterTable');
-
         if ($resultCounter)
         {
+            if ((int)(count($resultCounter) * 1.2) > $line)
+            {
+                throw new Exception("counterTable 缓存数据可能超过你设置的行数，请检查并扩大");
+            }
+
+
             $this->counterMembers = $resultCounter;
             $counterTable = $this->prometheusExporterTable->getCounterTable();
             $this->setTable($resultCounter, 'counterTableValue:', $counterTable);
@@ -75,10 +87,17 @@ class CacheForTable
     private function getGaugeTable()
     {
         $redisPrefix = env('PROMETHEUSEXPORTER_REDIS_PREFIX');
+        $line = env('PROMETHEUSEXPORTER_GAUGE_LINE');
         $resultGauge = $this->cache->sMembers($redisPrefix . 'gaugeTable');
 
         if ($resultGauge)
         {
+            if ((int)(count($resultGauge) * 1.2) > $line)
+            {
+                throw new Exception("gaugeTable 缓存数据可能超过你设置的行数，请检查并扩大");
+            }
+
+
             $this->gaugeMembers = $resultGauge;
             $gaugeTable = $this->prometheusExporterTable->getGaugeTable();
             $this->setTable($resultGauge, 'gaugeTableValue:', $gaugeTable);
@@ -88,10 +107,14 @@ class CacheForTable
     private function getHistogramTable()
     {
         $redisPrefix = env('PROMETHEUSEXPORTER_REDIS_PREFIX');
+        $line = env('PROMETHEUSEXPORTER_HISTOGRAM_LINE');
         $resultHistogram = $this->cache->sMembers($redisPrefix . 'histogramTable');
-
         if ($resultHistogram)
         {
+            if ((int)(count($resultHistogram) * 1.2) > $line)
+            {
+                throw new Exception("histogramTable 缓存数据可能超过你设置的行数，请检查并扩大");
+            }
             $this->histogramMembers = $resultHistogram;
             $histogramTable = $this->prometheusExporterTable->getHistogramTable();
             $this->setTable($resultHistogram, 'histogramTableValue:', $histogramTable);
