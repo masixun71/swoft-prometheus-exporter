@@ -155,7 +155,7 @@ class PECollectorRegistry
         $this->histograms[$sumCacheKey] = 1;
 
         $countMetricName = $metricName . '_count';
-        $countCacheKey = md5($sumMetricName . $labelString);
+        $countCacheKey = md5($countMetricName . $labelString);
         $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $countCacheKey, $histogram->getCount(), $countMetricName, $labelString, $histogram->getHelp());
         $this->histograms[$countCacheKey] = 1;
 
