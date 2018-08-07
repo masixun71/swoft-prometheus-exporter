@@ -52,16 +52,20 @@ class InitPrometheusExporterMiddleware implements MiddlewareInterface
         }
 
         $uri = $request->getSwooleRequest()->server['request_uri'];
-        $uri = ltrim($uri, '/');
-        $uri = str_replace('/', '_', $uri);
-        $this->collectorRegistry->counterIncr('http_request', 'total', 1, ['source' => 'all']);
-        $startMicroTime = (microtime(true) * 1000);
-        $response = $handler->handle($request);
-        $endMicroTime = (microtime(true) * 1000);
-        $value = ($endMicroTime - $startMicroTime) / 1000;
-        $this->collectorRegistry->counterIncr('http_request', 'total', 1, ['source' => 'api', 'uri' => $uri, 'code' => (string)$response->getStatusCode()]);
-        $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'all']);
-        $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'api', 'uri' => $uri]);
+        if (!empty($uri))
+        {
+            $uri = ltrim($uri, '/');
+            $uri = str_replace('/', '_', $uri);
+            $this->collectorRegistry->counterIncr('http_request', 'total', 1, ['source' => 'all']);
+            $startMicroTime = (microtime(true) * 1000);
+            $response = $handler->handle($request);
+            $endMicroTime = (microtime(true) * 1000);
+            $value = ($endMicroTime - $startMicroTime) / 1000;
+            $this->collectorRegistry->counterIncr('http_request', 'total', 1, ['source' => 'api', 'uri' => $uri, 'code' => (string)$response->getStatusCode()]);
+            $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'all']);
+            $this->collectorRegistry->histogramIncr('http_request', 'duration_seconds', $value, ['source' => 'api', 'uri' => $uri]);
+
+        }
 
         if (isset(PECacheTableCollector::getCollector()[RequestContext::getContextData()['controllerClass']][RequestContext::getContextData()['controllerAction']]))
         {
