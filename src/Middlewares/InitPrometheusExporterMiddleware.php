@@ -70,7 +70,7 @@ class InitPrometheusExporterMiddleware implements MiddlewareInterface
                 $cacheTable = PECacheTableCollector::getCollector()[RequestContext::getContextData()['controllerClass']][RequestContext::getContextData()['controllerAction']];
                 if ($cacheTable)
                 {
-                    $this->collectorRegistry->cacheTable();
+                    $this->collectorRegistry->cacheTable('prometheus', 'prometheus');
                 }
             }
         }

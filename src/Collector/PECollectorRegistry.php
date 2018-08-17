@@ -330,20 +330,20 @@ class PECollectorRegistry
     }
 
 
-    public function cacheTable()
+    public function cacheTable($job, $instance)
     {
         $redisPrefix = env('PROMETHEUSEXPORTER_REDIS_PREFIX');
         if (!empty($this->getCounters()))
         {
-            $this->addCache($redisPrefix, $this->getCounters(), 'counterTable', 'counterTableValue:', $this->prometheusExporterTable->getCounterTable());
+            $this->addCache($redisPrefix . $job . $instance, $this->getCounters(), 'counterTable', 'counterTableValue:', $this->prometheusExporterTable->getCounterTable());
         }
         if (!empty($this->getGauges()))
         {
-            $this->addCache($redisPrefix, $this->getGauges(), 'gaugeTable', 'gaugeTableValue:', $this->prometheusExporterTable->getGaugeTable());
+            $this->addCache($redisPrefix . $job . $instance, $this->getGauges(), 'gaugeTable', 'gaugeTableValue:', $this->prometheusExporterTable->getGaugeTable());
         }
         if (!empty($this->getHistograms()))
         {
-            $this->addCache($redisPrefix, $this->getHistograms(), 'histogramTable', 'histogramTableValue:', $this->prometheusExporterTable->getHistogramTable());
+            $this->addCache($redisPrefix . $job . $instance, $this->getHistograms(), 'histogramTable', 'histogramTableValue:', $this->prometheusExporterTable->getHistogramTable());
         }
 
     }
