@@ -9,6 +9,8 @@
 prometheus 是一个开源的系统监控和告警平台，通过Exporter即可快速地生成prometheus需要的记录信息，
 通过中间件和注解来对监控数据非侵入式注入。
 
+目前新增prometheus 是否持久化的选项
+
 # 环境强制要求
 
 1. 根据swoft官方要求即可
@@ -51,9 +53,10 @@ prometheus 是一个开源的系统监控和告警平台，通过Exporter即可�
 #####  PROMETHEUSEXPORTER_REDIS_PREFIX，持久化到redis的命名前缀
 #####  PROMETHEUSEXPORTER_PUSHGATEWAY_HOST, 若采用pushGateway,它的地址
 #####  PROMETHEUSEXPORTER_INSTANCE, 实例名，可以配置，也可以用主机名，适合多实例
-#####  PROMETHEUSEXPORTER_COUNTER_LINE，swoole table 申请的行数，下两个同理
+#####  PROMETHEUSEXPORTER_COUNTER_LINE，swoole table 申请的行数，下两个同理,若为0则不创建table
 #####  PROMETHEUSEXPORTER_GAUGE_LINE，
 #####  PROMETHEUSEXPORTER_HISTOGRAM_LINE，histogram需要的行数要较其他的较多，建议配置多点
+#####  PROMETHEUSEXPORTER_PERSISTENCE，prometheus 是否从redis获取持久化数据
 
 ```php
     PROMETHEUSEXPORTER_REDIS_PREFIX=www:www-api:cache:
@@ -62,6 +65,7 @@ prometheus 是一个开源的系统监控和告警平台，通过Exporter即可�
     PROMETHEUSEXPORTER_COUNTER_LINE=1024
     PROMETHEUSEXPORTER_GAUGE_LINE=1024
     PROMETHEUSEXPORTER_HISTOGRAM_LINE=4096
+    PROMETHEUSEXPORTER_PERSISTENCE=false
 
 ```
 
@@ -200,6 +204,11 @@ prometheus 是一个开源的系统监控和告警平台，通过Exporter即可�
 
 # 效果图
 ![image]()
+
+# 注意事项
+- namespace 和 name加上的大小最好不要超过40字节，可能会被截断
+- help参数限制的字符串为30字节以下
+- 一开始配置的line大小可能随着业务发展不够了，需要及时扩大
 
 
 # 问题

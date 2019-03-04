@@ -43,9 +43,11 @@ class CacheForTable
 
         if (!$counterTable->exist('setTable'))
         {
-            $this->getCounterTable();
-            $this->getGaugeTable();
-            $this->getHistogramTable();
+            if (env('PROMETHEUSEXPORTER_PERSISTENCE', false)) {
+                $this->getCounterTable();
+                $this->getGaugeTable();
+                $this->getHistogramTable();
+            }
 
             $counterTable->set('setTable', [
                 'metricName'   => 'setTable',

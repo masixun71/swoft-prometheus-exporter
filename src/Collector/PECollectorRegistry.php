@@ -9,6 +9,7 @@ use ExtraSwoft\PrometheusExporter\Metric\Histogram;
 use ExtraSwoft\PrometheusExporter\Exception\MetricsRegistrationException;
 use Swoft\Bean\Annotation\Bean;
 use Swoft\Bean\Annotation\Inject;
+use Swoft\Exception\Exception;
 use Swoft\Memory\Table;
 use Swoft\Redis\Redis;
 
@@ -61,6 +62,10 @@ class PECollectorRegistry
      */
     public function gaugeSet(string $namespace, string $name, $value, array $labels = [], string $help = '')
     {
+        $gaugeTable = $this->prometheusExporterTable->getGaugeTable();
+        if (is_null($gaugeTable)) {
+            throw new Exception("请检查是否配置PROMETHEUSEXPORTER_GAUGE_LINE,table没有创建");
+        }
         $metricName = $this->getMetricName($namespace, $name);
         $labelString = $this->getLabelString($labels);
 
@@ -73,7 +78,7 @@ class PECollectorRegistry
         ];
 
         $cacheKey = md5($metricName . $labelString);
-        $this->prometheusExporterTable->getGaugeTable()->set($cacheKey, $struct);
+        $gaugeTable->set($cacheKey, $struct);
 
 
         $this->gauges[$cacheKey] = 1;
@@ -92,13 +97,19 @@ class PECollectorRegistry
      */
     public function counterIncr(string $namespace, string $name, int $value, array $labels = [], string $help = '')
     {
+        $counterTable = $this->prometheusExporterTable->getCounterTable();
+
+        if (is_null($counterTable)) {
+            throw new Exception("请检查是否配置PROMETHEUSEXPORTER_COUNTER_LINE,table没有创建");
+        }
+
         $metricName = $this->getMetricName($namespace, $name);
         $labelString = $this->getLabelString($labels);
 
         $cacheKey = md5($metricName . $labelString);
 
 
-        $this->incrTable($this->prometheusExporterTable->getCounterTable(), $cacheKey, $value, $metricName, $labelString, $help);
+        $this->incrTable($counterTable, $cacheKey, $value, $metricName, $labelString, $help);
 
         $this->counters[$cacheKey] = 1;
     }
@@ -115,14 +126,19 @@ class PECollectorRegistry
      */
     public function counterDecr(string $namespace, string $name, int $value, array $labels = [])
     {
+        $counterTable = $this->prometheusExporterTable->getCounterTable();
+        if (is_null($counterTable)) {
+            throw new Exception("请检查是否配置PROMETHEUSEXPORTER_COUNTER_LINE,table没有创建");
+        }
+
         $metricName = $this->getMetricName($namespace, $name);
         $labelString = $this->getLabelString($labels);
 
         $cacheKey = md5($metricName . $labelString);
 
-        if ($this->prometheusExporterTable->getCounterTable()->exist($cacheKey))
+        if ($counterTable->exist($cacheKey))
         {
-            $this->prometheusExporterTable->getCounterTable()->decr($cacheKey, 'value', $value);
+            $counterTable->decr($cacheKey, 'value', $value);
         }
         else
         {
@@ -134,6 +150,11 @@ class PECollectorRegistry
 
     public function histogramIncr(string $namespace, string $name, float $value, array $labels = [], array $defaultBuckets = [], string $help = '')
     {
+        $histogramTable = $this->prometheusExporterTable->getHistogramTable();
+        if (is_null($histogramTable)) {
+            throw new Exception("请检查是否配置PROMETHEUSEXPORTER_HISTOGRAM_LINE,table没有创建");
+        }
+
         $histogram = new Histogram($namespace, $name, $labels, $defaultBuckets, $help);
         $histogram->incr($value);
         $metricName = $this->getMetricName($histogram->getNamespace(), $histogram->getName());
@@ -143,7 +164,7 @@ class PECollectorRegistry
         {
             $labelString = $this->getLabelString($item['label']);
             $cacheKey = md5($bucketMetricName . $labelString);
-            $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $cacheKey, $item['value'], $bucketMetricName, $labelString, $histogram->getHelp());
+            $this->incrTable($histogramTable, $cacheKey, $item['value'], $bucketMetricName, $labelString, $histogram->getHelp());
 
             $this->histograms[$cacheKey] = 1;
         }
@@ -151,12 +172,12 @@ class PECollectorRegistry
         $labelString = $this->getLabelString($histogram->getLabels());
         $sumMetricName = $metricName . '_sum';
         $sumCacheKey = md5($sumMetricName . $labelString);
-        $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $sumCacheKey, $histogram->getSum(), $sumMetricName, $labelString, $histogram->getHelp());
+        $this->incrTable($histogramTable, $sumCacheKey, $histogram->getSum(), $sumMetricName, $labelString, $histogram->getHelp());
         $this->histograms[$sumCacheKey] = 1;
 
         $countMetricName = $metricName . '_count';
         $countCacheKey = md5($countMetricName . $labelString);
-        $this->incrTable($this->prometheusExporterTable->getHistogramTable(), $countCacheKey, $histogram->getCount(), $countMetricName, $labelString, $histogram->getHelp());
+        $this->incrTable($histogramTable, $countCacheKey, $histogram->getCount(), $countMetricName, $labelString, $histogram->getHelp());
         $this->histograms[$countCacheKey] = 1;
 
     }
@@ -290,9 +311,10 @@ class PECollectorRegistry
         $lines = array();
         $map = [];
 
+        $histogramTable = $this->getPrometheusExporterTable()->getHistogramTable();
         foreach ($this->getHistograms() as $key => $value)
         {
-            $metric = $this->getPrometheusExporterTable()->getHistogramTable()->get($key);
+            $metric = $histogramTable->get($key);
 
             if (!isset($map[$metric['metricName']]))
             {
