@@ -82,7 +82,7 @@ class PrometheusExporterTable
     /**
      * @return Table
      */
-    public function getCounterTable(): Table
+    public function getCounterTable(): ?Table
     {
 
         return $this->counterTable;
@@ -91,7 +91,7 @@ class PrometheusExporterTable
     /**
      * @return Table
      */
-    public function getGaugeTable(): Table
+    public function getGaugeTable(): ?Table
     {
         return $this->gaugeTable;
     }
@@ -99,7 +99,7 @@ class PrometheusExporterTable
     /**
      * @return Table
      */
-    public function getHistogramTable(): Table
+    public function getHistogramTable(): ?Table
     {
         return $this->histogramTable;
     }

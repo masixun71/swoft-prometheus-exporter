@@ -268,10 +268,13 @@ class PECollectorRegistry
     }
 
 
-    public function getSingleRender($origin, Table $table, $type, $addTimestamp = false)
+    public function getSingleRender($origin, $table, $type, $addTimestamp = false)
     {
         if (empty($origin))
         {
+            return '';
+        }
+        if (empty($table)) {
             return '';
         }
 
